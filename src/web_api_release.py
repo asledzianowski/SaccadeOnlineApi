@@ -149,8 +149,9 @@ def process_results_data():
         time_string = now.strftime("%H%M%S")
 
         #save form data
-        with open(results_output_folder_path + 'form_data_' + time_string + '.json', 'w') as f:
-            json.dump(form_data, f)
+        if form_data is not None:
+            with open(results_output_folder_path + 'form_data_' + time_string + '.json', 'w') as f:
+                json.dump(form_data, f)
 
         calibration_data_df = pd.DataFrame(calibration_data)
         experiment_data_df = pd.DataFrame(experiment_data)
