@@ -321,5 +321,6 @@ def get_calibration_means(calibration_data):
 if __name__ == "__main__":
     print('starting')
     init_classifiers()
-    run(host='brainonline.pja.edu.pl', port=8080, server='gevent', keyfile='cert_key.pem', certfile='brainonline_pja_edu_pl_cert.cer', reloader=1)
-    #run(app, host='localhost', port=8080, debug=True, server='gevent')
+    run(host='brainonline.pja.edu.pl', port=8080, server='gevent', keyfile='C:\\DEV\\certificates\\cert_key.pem',
+        certfile='C:\\DEV\\certificates\\brainonline_pja_edu_pl_cert.cer', reloader=1)
+    # run(app, host='localhost', port=8080, debug=True, server='gevent')
