@@ -138,11 +138,19 @@ def process_results_data():
         distance_from_screen = request.json['distance_from_screen'] #86
         screen_resolution = request.json['screen_resolution']
         screen_width_mm = request.json['screen_width_mm']
+        form_data = request.json['form_data']
         
         print("distance_from_screen: ", distance_from_screen)
         print("screen_resolution: ", screen_resolution)
         print("screen_width_mm: ", screen_width_mm)
 
+        # save raw data
+        now = datetime.now()
+        time_string = now.strftime("%H%M%S")
+
+        #save form data
+        form_data_df = pd.DataFrame(calibration_data)
+        form_data_df.to_csv(results_output_folder_path + 'form_data_' + time_string + '.csv', index=False)
 
         calibration_data_df = pd.DataFrame(calibration_data)
         experiment_data_df = pd.DataFrame(experiment_data)
@@ -155,9 +163,6 @@ def process_results_data():
         experiment_data_df.loc[experiment_data_df['marker'] == -1, 'marker'] = calibration_means['mean_minus_1']
         freq = get_frequency_for_segment(experiment_data_df, 1000, 2000)
 
-        # save raw data
-        now = datetime.now()
-        time_string = now.strftime("%H%M%S")
         calibration_data_df.to_csv(results_output_folder_path +
                                    'calibration_out_' + time_string + '.csv', index=False)
         experiment_data_df.to_csv(results_output_folder_path + 'out_' + time_string +
