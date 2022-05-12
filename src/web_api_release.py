@@ -149,7 +149,7 @@ def process_results_data():
         time_string = now.strftime("%H%M%S")
 
         #save form data
-        form_data_df = pd.DataFrame(calibration_data)
+        form_data_df = pd.DataFrame(form_data)
         form_data_df.to_csv(results_output_folder_path + 'form_data_' + time_string + '.csv', index=False)
 
         calibration_data_df = pd.DataFrame(calibration_data)
