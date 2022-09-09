@@ -217,15 +217,15 @@ def test_quality():
         calibration_data_df.to_csv(results_output_folder_path +
                                    'test_quality_out_unsort' + time_string + '.csv', index=False)
 
-        calibration_data_df_sorted = calibration_data_df.sort_values(by=['time'], inplace=True)
+        calibration_data_df.sort_values(by=['time'], inplace=True)
 
-        calibration_data_df_sorted.to_csv(results_output_folder_path +
+        calibration_data_df.to_csv(results_output_folder_path +
                                    'test_quality_out_' + time_string + '.csv', index=False)
 
-        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df_sorted)
-        freq = get_frequency_for_segment(calibration_data_df_sorted, 1000, 2000)
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df)
+        freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
 
-        get_x_data_plot(calibration_data_df_sorted, time_string)
+        get_x_data_plot(calibration_data_df, time_string)
         plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
 
         pic_bytes = io.BytesIO()
