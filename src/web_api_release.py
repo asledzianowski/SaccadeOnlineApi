@@ -225,15 +225,15 @@ def test_quality():
         is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df_sorted)
         freq = get_frequency_for_segment(calibration_data_df_sorted, 1000, 2000)
 
-        graph_plt = get_x_data_plot(calibration_data_df_sorted, time_string)
-        graph_plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
+        get_x_data_plot(calibration_data_df_sorted, time_string)
+        plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
 
         pic_bytes = io.BytesIO()
-        graph_plt.savefig(pic_bytes, format='png')
+        plt.savefig(pic_bytes, format='png')
         pic_bytes.seek(0)
         base64_bytes = base64.b64encode(pic_bytes.read())
         base64_string = base64_bytes.decode('utf-8')
-        graph_plt.close('all')
+        plt.close('all')
 
         response.content_type = 'application/json'
         output_data = dumps(
@@ -386,7 +386,7 @@ def check_signal_quality(calibration_data):
 def get_x_data_plot(gaze_df, title):
     ax = gaze_df.dropna()[['gaze_x']].plot()
     ax.set_title(title)
-    return plt
+    #return plt
 
 if __name__ == "__main__":
     print('starting')
