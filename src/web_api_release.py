@@ -214,6 +214,9 @@ def test_quality():
 
         calibration_data = request.json['calibration_data']
         calibration_data_df = pd.DataFrame(calibration_data)
+        calibration_data_df.to_csv(results_output_folder_path +
+                                   'test_quality_out_unsort' + time_string + '.csv', index=False)
+
         calibration_data_df = calibration_data_df.sort_values(by=['time'])
 
         calibration_data_df.to_csv(results_output_folder_path +
@@ -224,7 +227,7 @@ def test_quality():
 
         graph_plt = get_x_data_plot(calibration_data_df, time_string)
         graph_plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
-        
+
         pic_bytes = io.BytesIO()
         graph_plt.savefig(pic_bytes, format='png')
         pic_bytes.seek(0)
