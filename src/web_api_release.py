@@ -217,7 +217,7 @@ def test_quality():
         calibration_data_df.to_csv(results_output_folder_path +
                                    'test_quality_out_unsort' + time_string + '.csv', index=False)
 
-        calibration_data_df_sorted = calibration_data_df.sort_values(by=['time'])
+        calibration_data_df_sorted = calibration_data_df.sort_values(by=['time'], inplace=True)
 
         calibration_data_df_sorted.to_csv(results_output_folder_path +
                                    'test_quality_out_' + time_string + '.csv', index=False)
