@@ -23,6 +23,7 @@ import numpy as np
 import cv2 as cv
 import pandas as pd
 from io import BytesIO
+from scipy.signal import periodogram
 from openvino_classifications.classification_manager import ClassificationManager
 from saccade_finder import SaccadeFinder
 import json
@@ -37,8 +38,9 @@ results_output_folder_path = r'../results/online/'
 
 def enable_cors(fn):
     def _enable_cors(*args, **kwargs):
-        # set CORS headers
-        response.headers['Access-Control-Allow-Origin'] = '*'
+        # set CORS domain for live server
+        response.headers['Access-Control-Allow-Origin'] = 'brainonline.pja.edu.pl'
+        #response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
         response.headers[
             'Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
@@ -202,6 +204,26 @@ def process_results_data():
         return str(ex)
 
 
+@route(path='/testquality', method=['OPTIONS', 'POST'])
+@enable_cors
+def test_quality():
+    try:
+        # convert input data
+        calibration_data = request.json['calibration_data']
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data)
+        response.content_type = 'application/json'
+        output_data = dumps(
+            {'is_good': is_good,
+             'power_spectrum_mean': power_spectrum_mean,
+             'mean_sd_relation': mean_sd_relation})
+        return output_data
+
+    except Exception as ex:
+        print(ex)
+        # response.status = 500
+        return str(ex)
+
+
 @route(path='/getfacedataid', method=['OPTIONS', 'POST'])
 @enable_cors
 def get_face_data_id():
@@ -318,6 +340,22 @@ def get_calibration_means(calibration_data):
         'mean_minus_1': np.round(np.mean(filetered_data_minus_1["gaze_x"]), 2)}
     return means
 
+def signaltonoise(a, axis=0, ddof=0):
+    a = np.asanyarray(a)
+    m = a.mean(axis)
+    sd = a.std(axis=axis, ddof=ddof)
+    return np.where(sd == 0, 0, m/sd)
+
+def check_signal_quality(calibration_data):
+    x_data = np.array(calibration_data['gaze_x'])
+    f, P = periodogram(x_data)
+    power_spectrum_mean = np.round(np.mean(P), 4)
+    mean_sd_relation = abs(np.round(signaltonoise(x_data), 4))
+
+    if power_spectrum_mean >= 0.1 or mean_sd_relation <= 1.0:
+        return True, power_spectrum_mean, mean_sd_relation
+    else:
+        return False, power_spectrum_mean, mean_sd_relation
 
 if __name__ == "__main__":
     print('starting')
