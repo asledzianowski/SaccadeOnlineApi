@@ -14,6 +14,7 @@ import bottle
 from bottle import route, run, request, response
 
 import base64
+import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 from json import dumps
@@ -213,11 +214,23 @@ def test_quality():
         calibration_data_df = pd.DataFrame(calibration_data)
         calibration_data_df = calibration_data_df.sort_values(by=['time'])
         is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df)
+        freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
+
+        graph_plt = get_x_data_plot(calibration_data_df)
+        pic_bytes = io.BytesIO()
+        graph_plt.savefig(pic_bytes, format='png')
+        pic_bytes.seek(0)
+        base64_bytes = base64.b64encode(pic_bytes.read())
+        base64_string = base64_bytes.decode('utf-8')
+        graph_plt.close('all')
+
         response.content_type = 'application/json'
         output_data = dumps(
             {'is_good': is_good,
              'power_spectrum_mean': power_spectrum_mean,
-             'mean_sd_relation': mean_sd_relation})
+             'mean_sd_relation': mean_sd_relation,
+             'freq': str(freq),
+             'image': base64_string})
         return output_data
 
     except Exception as ex:
@@ -358,6 +371,10 @@ def check_signal_quality(calibration_data):
         return True, power_spectrum_mean, mean_sd_relation
     else:
         return False, power_spectrum_mean, mean_sd_relation
+
+def get_x_data_plot(gaze_df):
+    ax = gaze_df.dropna()[['gaze_x']].plot()
+    return plt
 
 if __name__ == "__main__":
     print('starting')
