@@ -223,6 +223,8 @@ def test_quality():
         freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
 
         graph_plt = get_x_data_plot(calibration_data_df, time_string)
+        graph_plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
+        
         pic_bytes = io.BytesIO()
         graph_plt.savefig(pic_bytes, format='png')
         pic_bytes.seek(0)
