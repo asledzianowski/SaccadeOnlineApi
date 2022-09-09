@@ -209,14 +209,20 @@ def process_results_data():
 @enable_cors
 def test_quality():
     try:
-        # convert input data
+        now = datetime.now()
+        time_string = now.strftime("%H%M%S")
+
         calibration_data = request.json['calibration_data']
         calibration_data_df = pd.DataFrame(calibration_data)
         calibration_data_df = calibration_data_df.sort_values(by=['time'])
+
+        calibration_data_df.to_csv(results_output_folder_path +
+                                   'test_quality_out_' + time_string + '.csv', index=False)
+
         is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df)
         freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
 
-        graph_plt = get_x_data_plot(calibration_data_df)
+        graph_plt = get_x_data_plot(calibration_data_df, time_string)
         pic_bytes = io.BytesIO()
         graph_plt.savefig(pic_bytes, format='png')
         pic_bytes.seek(0)
@@ -372,8 +378,9 @@ def check_signal_quality(calibration_data):
     else:
         return False, power_spectrum_mean, mean_sd_relation
 
-def get_x_data_plot(gaze_df):
+def get_x_data_plot(gaze_df, title):
     ax = gaze_df.dropna()[['gaze_x']].plot()
+    ax.set_title(title)
     return plt
 
 if __name__ == "__main__":
