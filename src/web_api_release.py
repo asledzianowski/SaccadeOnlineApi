@@ -210,7 +210,9 @@ def test_quality():
     try:
         # convert input data
         calibration_data = request.json['calibration_data']
-        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data)
+        calibration_data_df = pd.DataFrame(calibration_data)
+        calibration_data_df = calibration_data_df.sort_values(by=['time'])
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df)
         response.content_type = 'application/json'
         output_data = dumps(
             {'is_good': is_good,
