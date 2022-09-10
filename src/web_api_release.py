@@ -214,19 +214,19 @@ def test_quality():
 
         calibration_data = request.json['calibration_data']
         calibration_data_df = pd.DataFrame(calibration_data)
-        calibration_data_df.to_csv(results_output_folder_path +
-                                   'test_quality_out_unsort' + time_string + '.csv', index=False)
+        # calibration_data_df.to_csv(results_output_folder_path +
+        #                            'test_quality_out_unsort' + time_string + '.csv', index=False)
 
         calibration_data_df.sort_values(by=['time'], inplace=True)
 
-        calibration_data_df.to_csv(results_output_folder_path +
-                                   'test_quality_out_' + time_string + '.csv', index=False)
+        # calibration_data_df.to_csv(results_output_folder_path +
+        #                            'test_quality_out_' + time_string + '.csv', index=False)
 
         is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df)
         freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
 
         get_x_data_plot(calibration_data_df, time_string)
-        plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
+        # plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
 
         pic_bytes = io.BytesIO()
         plt.savefig(pic_bytes, format='png')
