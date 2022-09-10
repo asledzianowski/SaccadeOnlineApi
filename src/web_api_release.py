@@ -172,6 +172,8 @@ def process_results_data():
         experiment_data_df.to_csv(results_output_folder_path + 'out_' + time_string +
                                   '_' + str(freq) + 'hz' + '.csv', index=False)
         # analyze data
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(experiment_data_df)
+
         saccade_finder = SaccadeFinder(freq, distance_from_screen, screen_resolution, screen_width_mm)
         df_parameters, graph_plt = saccade_finder.analyze_result(experiment_data_df, time_string)
         # save results
@@ -195,7 +197,10 @@ def process_results_data():
             'result_id': time_string,
             'result_freq': str(freq),
             'result_image': base64_string,
-            'result_data': json_list
+            'result_data': json_list,
+            'result_is_good': is_good,
+            'power_spectrum_mean': power_spectrum_mean,
+            'mean_sd_relation': mean_sd_relation
         })
         return output_data
 
