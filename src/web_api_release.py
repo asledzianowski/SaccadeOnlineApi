@@ -40,7 +40,7 @@ results_output_folder_path = r'../results/online/'
 def enable_cors(fn):
     def _enable_cors(*args, **kwargs):
         # set CORS domain for live server
-        response.headers['Access-Control-Allow-Origin'] = 'brainonline.pja.edu.pl'
+        response.headers['Access-Control-Allow-Origin'] = 'https://brainonline.pja.edu.pl'
         #response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
         response.headers[
