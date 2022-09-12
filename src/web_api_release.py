@@ -166,14 +166,15 @@ def process_results_data():
         experiment_data_df.loc[experiment_data_df['marker'] == 1, 'marker'] = calibration_means['mean_1']
         experiment_data_df.loc[experiment_data_df['marker'] == -1, 'marker'] = calibration_means['mean_minus_1']
         freq = get_frequency_for_segment(experiment_data_df, 1000, 2000)
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(experiment_data_df, False)
+        if is_good:
+            time_string = time_string + "_sgnl_ok"
 
         calibration_data_df.to_csv(results_output_folder_path +
                                    'calibration_out_' + time_string + '.csv', index=False)
         experiment_data_df.to_csv(results_output_folder_path + 'out_' + time_string +
                                   '_' + str(freq) + 'hz' + '.csv', index=False)
         # analyze data
-        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(experiment_data_df, False)
-
         saccade_finder = SaccadeFinder(freq, distance_from_screen, screen_resolution, screen_width_mm)
         df_parameters, graph_plt = saccade_finder.analyze_result(experiment_data_df, time_string)
         # save results
