@@ -172,7 +172,7 @@ def process_results_data():
         experiment_data_df.to_csv(results_output_folder_path + 'out_' + time_string +
                                   '_' + str(freq) + 'hz' + '.csv', index=False)
         # analyze data
-        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(experiment_data_df)
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(experiment_data_df, False)
 
         saccade_finder = SaccadeFinder(freq, distance_from_screen, screen_resolution, screen_width_mm)
         df_parameters, graph_plt = saccade_finder.analyze_result(experiment_data_df, time_string)
@@ -227,7 +227,7 @@ def test_quality():
         # calibration_data_df.to_csv(results_output_folder_path +
         #                            'test_quality_out_' + time_string + '.csv', index=False)
 
-        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df)
+        is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df, True)
         freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
 
         get_x_data_plot(calibration_data_df, time_string)
@@ -377,16 +377,23 @@ def signaltonoise(a, axis=0, ddof=0):
     sd = a.std(axis=axis, ddof=ddof)
     return np.where(sd == 0, 0, m/sd)
 
-def check_signal_quality(calibration_data):
+def check_signal_quality(calibration_data, is_calibration):
     x_data = np.array(calibration_data['gaze_x'])
     f, P = periodogram(x_data)
     power_spectrum_mean = np.round(np.mean(P), 4)
     mean_sd_relation = abs(np.round(signaltonoise(x_data), 4))
 
-    if power_spectrum_mean >= 0.1 or mean_sd_relation <= 1.0:
-        return True, power_spectrum_mean, mean_sd_relation
+    if is_calibration:
+        if power_spectrum_mean >= 0.1 and mean_sd_relation <= 1.0:
+            return True, power_spectrum_mean, mean_sd_relation
+        else:
+            return False, power_spectrum_mean, mean_sd_relation
     else:
-        return False, power_spectrum_mean, mean_sd_relation
+        #   different threshold values for results
+        if power_spectrum_mean >= 0.02 and mean_sd_relation <= 3.5:
+            return True, power_spectrum_mean, mean_sd_relation
+        else:
+            return False, power_spectrum_mean, mean_sd_relation
 
 def get_x_data_plot(gaze_df, title):
     ax = gaze_df.dropna()[['gaze_x']].plot()
