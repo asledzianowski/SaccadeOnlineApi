@@ -223,7 +223,11 @@ def test_quality():
         # calibration_data_df.to_csv(results_output_folder_path +
         #                            'test_quality_out_unsort' + time_string + '.csv', index=False)
 
-        calibration_data_df.sort_values(by=['time'], inplace=True)
+        calibration_data_df = calibration_data_df.sort_values(by=['time'])
+        calibration_means = get_calibration_means(calibration_data_df)
+        calibration_data_df.loc[calibration_data_df['marker'] == 0, 'marker'] = calibration_means['mean_0']
+        calibration_data_df.loc[calibration_data_df['marker'] == 1, 'marker'] = calibration_means['mean_1']
+        calibration_data_df.loc[calibration_data_df['marker'] == -1, 'marker'] = calibration_means['mean_minus_1']
 
         # calibration_data_df.to_csv(results_output_folder_path +
         #                            'test_quality_out_' + time_string + '.csv', index=False)
@@ -397,7 +401,7 @@ def check_signal_quality(calibration_data, is_calibration):
             return False, power_spectrum_mean, mean_sd_relation
 
 def get_x_data_plot(gaze_df, title):
-    ax = gaze_df.dropna()[['gaze_x']].plot()
+    ax = gaze_df.dropna()[['gaze_x', 'marker']].plot()
     ax.set_title(title)
     #return plt
 
