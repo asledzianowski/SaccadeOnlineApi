@@ -1,4 +1,4 @@
-from gevent import monkey
+from gevent import monkey, spawn
 
 monkey.patch_all()
 import sys
@@ -223,7 +223,7 @@ def test_quality():
         # calibration_data_df.to_csv(results_output_folder_path +
         #                            'test_quality_out_unsort' + time_string + '.csv', index=False)
 
-        calibration_data_df = calibration_data_df.sort_values(by=['time'])
+        calibration_data_df = spawn(calibration_data_df.sort_values(by=['time']))
         calibration_means = get_calibration_means(calibration_data_df)
         calibration_data_df.loc[calibration_data_df['marker'] == 0, 'marker'] = calibration_means['mean_0']
         calibration_data_df.loc[calibration_data_df['marker'] == 1, 'marker'] = calibration_means['mean_1']
