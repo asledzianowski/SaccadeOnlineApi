@@ -215,43 +215,18 @@ def process_results_data():
 @enable_cors
 def test_quality():
     try:
-        now = datetime.now()
-        time_string = now.strftime("%H%M%S")
-
         calibration_data = request.json['calibration_data']
         calibration_data_df = pd.DataFrame(calibration_data)
-        # calibration_data_df.to_csv(results_output_folder_path +
-        #                            'test_quality_out_unsort' + time_string + '.csv', index=False)
-
-        calibration_data_df = calibration_data_df.sort_values(by=['time'])
-        calibration_means = get_calibration_means(calibration_data_df)
-        calibration_data_df.loc[calibration_data_df['marker'] == 0, 'marker'] = calibration_means['mean_0']
-        calibration_data_df.loc[calibration_data_df['marker'] == 1, 'marker'] = calibration_means['mean_1']
-        calibration_data_df.loc[calibration_data_df['marker'] == -1, 'marker'] = calibration_means['mean_minus_1']
-
-        # calibration_data_df.to_csv(results_output_folder_path +
-        #                            'test_quality_out_' + time_string + '.csv', index=False)
-
         is_good, power_spectrum_mean, mean_sd_relation = check_signal_quality(calibration_data_df, True)
         freq = get_frequency_for_segment(calibration_data_df, 1000, 2000)
-
-        get_x_data_plot(calibration_data_df, time_string)
-        # plt.savefig(results_output_folder_path + 'chart_test_quality_out_' + time_string + '.png')
-
-        pic_bytes = io.BytesIO()
-        plt.savefig(pic_bytes, format='png')
-        pic_bytes.seek(0)
-        base64_bytes = base64.b64encode(pic_bytes.read())
-        base64_string = base64_bytes.decode('utf-8')
-        plt.close('all')
 
         response.content_type = 'application/json'
         output_data = dumps(
             {'is_good': is_good,
              'power_spectrum_mean': power_spectrum_mean,
              'mean_sd_relation': mean_sd_relation,
-             'freq': str(freq),
-             'image': base64_string})
+             'freq': str(freq)
+             })
         return output_data
 
     except Exception as ex:
