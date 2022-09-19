@@ -364,7 +364,8 @@ def check_signal_quality(calibration_data, is_calibration):
     mean_sd_relation = abs(np.round(signaltonoise(x_data), 4))
 
     if is_calibration:
-        if power_spectrum_mean >= 0.1 and mean_sd_relation <= 1.0:
+        #power_spectrum_mean threshold 0.1 but for small tolerance 0.09
+        if power_spectrum_mean >= 0.09 and mean_sd_relation <= 1.0:
             return True, power_spectrum_mean, mean_sd_relation
         else:
             return False, power_spectrum_mean, mean_sd_relation
