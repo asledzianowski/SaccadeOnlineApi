@@ -25,31 +25,36 @@ import math
 
 warnings.filterwarnings('ignore')
 # %matplotlib inline
-plt.rcParams["figure.figsize"] = (20,8)
+plt.rcParams["figure.figsize"] = (20, 8)
+
 
 def atan(x):
     return np.arctan(x)
 
+
 class SaccadeFinder:
 
     def __init__(
-            self, 
-            freq_hz=14, 
-            distance_from_screen=86,
-            screen_resolution_pixels=(1920, 1080),
-            screen_width_mm=544
-        ):
+            self,
+            freq_hz,
+            distance_from_screen,
+            screen_resolution_pixels,
+            screen_width_mm
+            # freq_hz = 14,
+            # distance_from_screen = 86,
+            # screen_resolution_pixels = (1920, 1080),
+            # screen_width_mm = 544
+    ):
 
         self.freq_hz = freq_hz
         self.distance_from_screen = distance_from_screen
         self.screen_resolution = screen_resolution_pixels
         self.screen_width = screen_width_mm
 
-
         self.min_saccade_latency_ms = 40
         self.max_saccade_latency_ms = 600
 
-        self.min_saccade_duration_ms = 60
+        self.min_saccade_duration_ms = 10
         self.max_saccade_duration_ms = 350
 
         # saccade amplitude should be greater than standard deviation * min_saccade_std_factor
@@ -61,13 +66,11 @@ class SaccadeFinder:
         # 1 because difference between 2 indexes is calculated
         self.minimum_saccade_indexes = math.ceil(self.min_saccade_duration_ms / self.period_ms_round) + 1
 
-
     def read_df(self, folder_type, file_id):
         filepath = os.path.join(folder_type, f'out_{file_id}.csv')
         df = pd.read_csv(filepath)
         df = df.set_index('time')
         return df
-
 
     def find_signal_changes(self, df, col):
         '''
@@ -76,7 +79,6 @@ class SaccadeFinder:
         '''
         diff = df[col].diff()
         return diff[diff != 0].iloc[1:]
-
 
     @dataclasses.dataclass
     class SaccadeParameters:
@@ -87,13 +89,12 @@ class SaccadeFinder:
         DurationFrameCount: int
         Latency: float
         Duration: float
-        Amplitude: float = None # degrees
-        Distance: float = None # cm on screen
-        Velocity: float = None # deg/s
-        AvgVelocity: float = None # average per each frame
-        MaxVelocity: float = None # max in all saccade frames
+        Amplitude: float = None  # degrees
+        Distance: float = None  # cm on screen
+        Velocity: float = None  # deg/s
+        AvgVelocity: float = None  # average per each frame
+        MaxVelocity: float = None  # max in all saccade frames
         Gain: float = None
-
 
     def plot_saccades(self, df_s, sac, tittle):
         ax = df_s.dropna()[['gaze_x', 'marker']].plot()
@@ -104,7 +105,6 @@ class SaccadeFinder:
         ax.set_title(tittle)
         return plt
 
-
     # +
     def get_signal_changes_with_direction(self, df):
         signal_changes_df = self.find_signal_changes(df, 'state')
@@ -113,11 +113,9 @@ class SaccadeFinder:
         return signal_changes_index, direction
 
     def split_df_with_direction(self, df, direction, signal_changes_index):
-        part_dfs = [df.loc[idx:idx+5000] for idx in signal_changes_index]
+        part_dfs = [df.loc[idx:idx + 5000] for idx in signal_changes_index]
         part_df_direction = list(zip(part_dfs, direction, signal_changes_index))
         return part_df_direction
-
-
 
     # -
 
@@ -130,21 +128,18 @@ class SaccadeFinder:
             start_idx = part_df.index.tolist()[0]
             std = part_df.gaze_x.std()
 
-
             if direction == 1:
                 part_df['diff_binary'] = part_df['diff'].apply(lambda x: 1 if x < 0.01 else 0)
             else:
                 part_df['diff_binary'] = part_df['diff'].apply(lambda x: 1 if x > -0.01 else 0)
-
 
             groups = part_df[['diff', 'diff_binary']].ne(0).cumsum()
             clusters = part_df.state.groupby(groups['diff_binary']).agg(list)
 
             cluster_min_len = clusters[clusters.apply(len) >= self.minimum_saccade_indexes].reset_index()
 
-            cluster_min_len['group_idx'] = cluster_min_len.diff_binary\
+            cluster_min_len['group_idx'] = cluster_min_len.diff_binary \
                 .apply(lambda x: groups[groups.diff_binary == x].index.tolist())
-
 
             cluster_min_len['change'] = cluster_min_len.group_idx.apply(
                 lambda x: (part_df.loc[x[-1]] - part_df.loc[x[0]]).gaze_x
@@ -159,9 +154,10 @@ class SaccadeFinder:
 
             cluster_min_len['amplitude'] = cluster_min_len.change.abs()
 
-
-            cluster_min_len = cluster_min_len.query(f'{self.min_saccade_latency_ms} < latency < {self.max_saccade_latency_ms}')
-            cluster_min_len = cluster_min_len.query(f'{self.min_saccade_duration_ms} < duration < {self.max_saccade_duration_ms}')
+            cluster_min_len = cluster_min_len.query(
+                f'{self.min_saccade_latency_ms} < latency < {self.max_saccade_latency_ms}')
+            cluster_min_len = cluster_min_len.query(
+                f'{self.min_saccade_duration_ms} < duration < {self.max_saccade_duration_ms}')
 
             cluster_min_len = cluster_min_len.query(f'{std * self.min_saccade_std_factor} < amplitude')
             if direction == 1:
@@ -171,14 +167,13 @@ class SaccadeFinder:
             cluster_idx = cluster_min_len.query(f'abs(change) > {std}').iloc[0]
             saccade_start_idx = cluster_idx.group_idx[0]
             saccade_end_idx = cluster_idx.group_idx[-1]
-    #         single saccade plot
-    #         plot_saccades(df, [(saccade_start_idx, saccade_end_idx)], file_id)
+            #         single saccade plot
+            #         plot_saccades(df, [(saccade_start_idx, saccade_end_idx)], file_id)
 
             return (saccade_start_idx, saccade_end_idx)
         except IndexError as e:
             print('There was an error looking for a saccade', e)
             return None
-
 
     def calculate_saccade_params_df(self, df, saccades, signal_change_idx):
         sac_parameters = []
@@ -199,14 +194,14 @@ class SaccadeFinder:
             marker_amplitude_rad = @atan(marker_tangens)
             marker_amplitude = @self.RadianToDegree(marker_amplitude_rad)
         """
-        )
+                     )
         for sac, marker in zip(saccades, signal_change_idx):
             try:
                 # a = df.gaze_x[sac[0]]
                 # b = df.gaze_x[sac[1]]
                 # scaled_a = self.screen_resolution[0] * a
                 # scaled_b = self.screen_resolution[0] * b
-                
+
                 # pixel_distance = np.abs(scaled_a - scaled_b)
                 # distance_on_screen_cm = self.pixels_to_cm(pixel_distance)
 
@@ -218,7 +213,7 @@ class SaccadeFinder:
 
                 duration_s = (sac[1] - sac[0]) / 1000
                 latency = (sac[0] - marker)
-                saccade_df = df.loc[sac[0] + 1:sac[1]] # +1 because of shift when using diff function
+                saccade_df = df.loc[sac[0] + 1:sac[1]]  # +1 because of shift when using diff function
                 amplitude = saccade_df.amplitude.sum()
                 velocity = saccade_df.amplitude.sum() / saccade_df.duration_s.sum()
                 avg_velocity = saccade_df.velocity.mean()
@@ -227,11 +222,11 @@ class SaccadeFinder:
 
                 last_marker_amplitude = (
                     df.loc[:sac[0], ['marker_amplitude']]
-                        .query('marker_amplitude > 0')
-                        .marker_amplitude.iloc[-1]
+                    .query('marker_amplitude > 0')
+                    .marker_amplitude.iloc[-1]
                 )
                 gain = amplitude / last_marker_amplitude
-      
+
                 sac_param = self.SaccadeParameters(
                     Start=sac[0],
                     End=sac[1],
@@ -240,17 +235,17 @@ class SaccadeFinder:
                     DurationFrameCount=int((sac[1] - sac[0]) / self.period_ms_round),
                     Latency=latency,
                     Duration=duration_s * 1000,
-                    Amplitude= round(amplitude,2),
+                    Amplitude=round(amplitude, 2),
                     Distance=distance_on_screen_cm,
-                    Velocity= round(velocity,2),
-                    AvgVelocity=round(avg_velocity,2),
-                    MaxVelocity=round(max_velocity,2),
-                    Gain=round(gain,2)
+                    Velocity=round(velocity, 2),
+                    AvgVelocity=round(avg_velocity, 2),
+                    MaxVelocity=round(max_velocity, 2),
+                    Gain=round(gain, 2)
                 )
                 time_str = f'{sac_param.Start} - {sac_param.End}'
                 assert sac_param.Latency > self.min_saccade_latency_ms, f'Saccade latency was below 30ms, ({time_str})'
                 assert sac_param.Duration > 30, f'Saccade duration was below 30ms, ({time_str})'
-                assert sac_param.Start > sac_param.MarkerChange,'Saccade before marker change'
+                assert sac_param.Start > sac_param.MarkerChange, 'Saccade before marker change'
                 sac_parameters.append(sac_param.__dict__)
             except AssertionError as e:
                 print(e)
@@ -265,7 +260,7 @@ class SaccadeFinder:
     def pixels_to_cm(self, pixel_dist):
         pixel_to_mm = self.screen_width / self.screen_resolution[0]
         distance_mm = pixel_to_mm * pixel_dist
-        distance_cm = distance_mm / 10 
+        distance_cm = distance_mm / 10
         return distance_cm
 
     def find_saccades(self, df):
@@ -287,16 +282,12 @@ class SaccadeFinder:
 
         return df_parameters, all_saccades
 
-
-
     def analyze_result(self, df, id):
         df = df.set_index('time')
         df_parameters, all_saccades = self.find_saccades(df)
         graph_plt = self.plot_saccades(df, all_saccades, id)
         return df_parameters, graph_plt
 
-
 # sf = SaccadeFinder()
 # df = pd.read_csv('data/out_183318.csv')
 # sf.analyze_result(df, '135714')
-
