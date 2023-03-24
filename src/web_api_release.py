@@ -27,7 +27,6 @@ from io import BytesIO
 from scipy.signal import periodogram
 from openvino_classifications.classification_manager import ClassificationManager
 from saccade_finder import SaccadeFinder
-from saccade_finder_v2 import SaccadeFinderV2
 import json
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -176,8 +175,7 @@ def process_results_data():
         experiment_data_df.to_csv(results_output_folder_path + 'out_' + time_string +
                                   '_' + str(freq) + 'hz' + '.csv', index=False)
         # analyze data
-        #saccade_finder = SaccadeFinder(freq, distance_from_screen, screen_resolution, screen_width_mm)
-        saccade_finder = SaccadeFinderV2(freq, distance_from_screen, screen_resolution, screen_width_mm)
+        saccade_finder = SaccadeFinder(freq, distance_from_screen, screen_resolution, screen_width_mm)
         df_parameters, graph_plt = saccade_finder.analyze_result(experiment_data_df, time_string)
         # save results
         df_parameters.to_csv(results_output_folder_path + 'calculations_out_' + time_string + '.csv', index=False)
